@@ -231,7 +231,14 @@ public class ThrustCopter extends ApplicationAdapter {
 			if (meteorPosition.x < -10){
 				meteorInScene = false;
 			}
-
+			obstacleRect.set(meteorPosition.x + 2, meteorPosition.y + 2,
+					selectedMeteorTexture.getRegionWidth() - 4,
+					selectedMeteorTexture.getRegionHeight() - 4);
+			if (planeRect.overlaps(obstacleRect)){
+				if (gameState != GameState.GAME_OVER){
+					gameState = GameState.GAME_OVER;
+				}
+			}
 		}
 		nextMeteorIn -= deltaTime;
 		if (nextMeteorIn <= 0){
