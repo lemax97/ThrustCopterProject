@@ -32,10 +32,10 @@ public class Pickup {
                 pickupSound = manager.get("sounds/shield.ogg", Sound.class);
                 break;
             case FUEL:
-            pickupTexture = atlas.findRegion("fuel_pickup");
-            pickupValue = 100;
-            pickupSound = manager.get("sounds/fuel.ogg", Sound.class);
-            break;
+                pickupTexture = atlas.findRegion("fuel_pickup");
+                pickupValue = 100;
+                pickupSound = manager.get("sounds/fuel.ogg", Sound.class);
+                break;
         }
     }
 }
