@@ -28,6 +28,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 	TextureRegion bgRegion, terrainBelow, terrainAbove, tap2,
 			tap1, pillarUp, pillarDown, selectedMeteorTexture;
 	Animation plane;
+	Animation shield;
 	Array<TextureAtlas.AtlasRegion> meteorTextures;
 
 	Batch batch;
@@ -104,9 +105,16 @@ public class ThrustCopterScene extends ScreenAdapter {
 				atlas.findRegion("planeRed2"));
 		plane.setPlayMode(PlayMode.LOOP);
 
-		music = game.manager.get("sounds/journey.mp3", Music.class);
+		shield = new Animation(0.1f,
+				atlas.findRegion("shield1"),
+				atlas.findRegion("shield2"),
+				atlas.findRegion("shield3"),
+				atlas.findRegion("shield2"));
+		plane.setPlayMode(PlayMode.LOOP_PINGPONG);
+
+		music = game.manager.get("sounds/BMPMus1.mp3", Music.class);
 		music.setLooping(true);
-		music.setVolume(0);
+		music.setVolume(0.2f);
 		music.play();
 		tapSound =game.manager.get("sounds/pop.ogg", Sound.class);
 		crashSound = game.manager.get("sounds/crash.ogg", Sound.class);
@@ -211,7 +219,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 				starCount += pickup.pickupValue;
 				break;
 			case Pickup.SHIELD:
-				shieldCount += pickup.pickupValue;
+				shieldCount = pickup.pickupValue;
 				break;
 			case Pickup.FUEL:
 				fuelCount += pickup.pickupValue;
@@ -405,6 +413,11 @@ public class ThrustCopterScene extends ScreenAdapter {
 				planePosition.y);
 		if (gameState == GameState.ACTION) smoke.draw(batch);
 
+		if (shieldCount > 0){
+			font.draw(batch, "" + ((int) shieldCount), 390, 450);
+			batch.draw((TextureRegion) shield.getKeyFrame(planeAnimTime), planePosition.x - 20, planePosition.y);
+		}
+
 		if (meteorInScene){
 			batch.draw(selectedMeteorTexture, meteorPosition.x, meteorPosition.y);
 		}
@@ -414,7 +427,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 		batch.setColor(Color.WHITE);
 		batch.draw(fuelIndicator, 10, 350, 0, 0,
 				fuelIndicator.getWidth() * fuelPercentage/100, 119);
-		font.draw(batch, "" + ((int) shieldCount), 390, 450);
+
 		font.draw(batch, "" + (int) (starCount + score), 700, 450);
 		if (gameState == GameState.GAME_OVER) explosion.draw(batch);
 		batch.end();

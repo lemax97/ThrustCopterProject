@@ -40,7 +40,7 @@ public class ThrustCopter extends Game {
     public void create() {
         manager.load("gameover.png", Texture.class);
         manager.load("life.png", Texture.class);
-        manager.load("sounds/journey.mp3", Music.class);
+        manager.load("sounds/BMPMus1.mp3", Music.class);
         manager.load("sounds/pop.ogg", Sound.class);
         manager.load("sounds/crash.ogg", Sound.class);
         manager.load("sounds/alarm.ogg", Sound.class);
