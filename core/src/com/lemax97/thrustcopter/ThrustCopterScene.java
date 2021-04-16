@@ -43,7 +43,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 	Rectangle planeRect, obstacleRect;
 	Vector3 touchPosition, pickupTiming;
 	Pickup tempPickup;
-	BitmapFont font;
+
 	ParticleEffect smoke, explosion;
 	Music music;
 	Sound tapSound, crashSound, spawnSound;
@@ -58,8 +58,6 @@ public class ThrustCopterScene extends ScreenAdapter {
 		game = thrustCopter;
 		batch = game.batch;
 		camera = game.camera;
-		atlas = game.atlas;
-
 		tmpVector = new Vector2();
 		planeVelocity = new Vector2();
 		planePosition = new Vector2();
@@ -78,9 +76,10 @@ public class ThrustCopterScene extends ScreenAdapter {
 		pickupTiming = new Vector3();
 		pickupsInScene = new Array<Pickup>();
 //		camera.setToOrtho(false, 800, 480);
-		font = game.manager.get("impact-40.fnt", BitmapFont.class);
+
 		smoke = game.manager.get("SmokeM", ParticleEffect.class);
 		explosion = game.manager.get("Explosion", ParticleEffect.class);
+
 		tap2 = atlas.findRegion("tap2");
 		tap1 = atlas.findRegion("tap1");
 		pillarUp = atlas.findRegion("rockGrassUp");
@@ -414,7 +413,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 		if (gameState == GameState.ACTION) smoke.draw(batch);
 
 		if (shieldCount > 0){
-			font.draw(batch, "" + ((int) shieldCount), 390, 450);
+			game.font.draw(batch, "" + ((int) shieldCount), 390, 450);
 			batch.draw((TextureRegion) shield.getKeyFrame(planeAnimTime), planePosition.x - 20, planePosition.y);
 		}
 
@@ -428,7 +427,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 		batch.draw(fuelIndicator, 10, 350, 0, 0,
 				fuelIndicator.getWidth() * fuelPercentage/100, 119);
 
-		font.draw(batch, "" + (int) (starCount + score), 700, 450);
+		game.font.draw(batch, "" + (int) (starCount + score), 700, 450);
 		if (gameState == GameState.GAME_OVER) explosion.draw(batch);
 		batch.end();
 	}

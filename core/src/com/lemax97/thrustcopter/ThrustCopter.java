@@ -19,6 +19,7 @@ public class ThrustCopter extends Game {
 
     SpriteBatch batch;
     TextureAtlas atlas;
+    BitmapFont font;
     OrthographicCamera camera;
     FPSLogger fpsLogger;
     Viewport viewport;
@@ -38,25 +39,7 @@ public class ThrustCopter extends Game {
 
     @Override
     public void create() {
-        manager.load("gameover.png", Texture.class);
-        manager.load("life.png", Texture.class);
-        manager.load("sounds/BMPMus1.mp3", Music.class);
-        manager.load("sounds/pop.ogg", Sound.class);
-        manager.load("sounds/crash.ogg", Sound.class);
-        manager.load("sounds/alarm.ogg", Sound.class);
-        manager.load("sounds/shield.ogg", Sound.class);
-        manager.load("sounds/fuel.ogg", Sound.class);
-        manager.load("sounds/star.ogg", Sound.class);
-        manager.load("thrustcopterassets.txt", TextureAtlas.class);
-        manager.load("impact-40.fnt", BitmapFont.class);
-        manager.load("SmokeM", ParticleEffect.class);
-        manager.load("Explosion", ParticleEffect.class);
-
-        manager.finishLoading();
-
         batch = new SpriteBatch();
-        atlas = manager.get("thrustcopterassets.txt", TextureAtlas.class);
-
         setScreen(new ThrustCopterScene(this));
     }
 

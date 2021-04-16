@@ -1,18 +1,25 @@
 package com.lemax97.thrustcopter;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL10;
+import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.GL30;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 /**
  * @author Mats Svensson
  */
-public class LoadingScreen extends AbstractScreen {
+public class LoadingScreen extends ScreenAdapter {
 
     private Stage stage;
 
@@ -27,8 +34,10 @@ public class LoadingScreen extends AbstractScreen {
 
     private Actor loadingBar;
 
-    public LoadingScreen(SomeCoolGame game) {
-        super(game);
+    ThrustCopter game;
+
+    public LoadingScreen(ThrustCopter thrustCopter) {
+        game = thrustCopter;
     }
 
     @Override
@@ -53,7 +62,7 @@ public class LoadingScreen extends AbstractScreen {
 
         // Add the loading bar animation
         Animation anim = new Animation(0.05f, atlas.findRegions("loading-bar-anim") );
-        anim.setPlayMode(Animation.LOOP_REVERSED);
+        anim.setPlayMode(Animation.PlayMode.LOOP_REVERSED);
         loadingBar = new LoadingBar(anim);
 
         // Or if you only need a static bar, you can do
@@ -71,6 +80,20 @@ public class LoadingScreen extends AbstractScreen {
         // game.manager.load("data/assets1.pack", TextureAtlas.class);
         // game.manager.load("data/assets2.pack", TextureAtlas.class);
         // game.manager.load("data/assets3.pack", TextureAtlas.class);
+        game.manager.load("gameover.png", Texture.class);
+        game.manager.load("life.png", Texture.class);
+        game.manager.load("sounds/BMPMus1.mp3", Music.class);
+        game.manager.load("sounds/pop.ogg", Sound.class);
+        game.manager.load("sounds/crash.ogg", Sound.class);
+        game.manager.load("sounds/alarm.ogg", Sound.class);
+        game.manager.load("sounds/shield.ogg", Sound.class);
+        game.manager.load("sounds/fuel.ogg", Sound.class);
+        game.manager.load("sounds/star.ogg", Sound.class);
+        game.manager.load("thrustcopterassets.txt", TextureAtlas.class);
+        game.manager.load("impact-40.fnt", BitmapFont.class);
+        game.manager.load("SmokeM", ParticleEffect.class);
+        game.manager.load("Explosion", ParticleEffect.class);
+        game.manager.finishLoading();
     }
 
     @Override
@@ -78,7 +101,12 @@ public class LoadingScreen extends AbstractScreen {
         // Set our screen to always be XXX x 480 in size
         width = 480 * width / height;
         height = 480;
-        stage.setViewport(width , height, false);
+
+        Viewport viewport = this.stage.getViewport();
+        viewport.setScreenWidth(width);
+        viewport.setScreenHeight(height);
+
+        stage.setViewport(viewport);
 
         // Make the background fill the screen
         screenBg.setSize(width, height);
@@ -111,12 +139,14 @@ public class LoadingScreen extends AbstractScreen {
     @Override
     public void render(float delta) {
         // Clear the screen
-        Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+        Gdx.gl.glClear(GL30.GL_COLOR_BUFFER_BIT);
 
         if (game.manager.update()) { // Load some, will return true if done loading
-            if (Gdx.input.isTouched()) { // If the screen is touched after the game is done loading, go to the main menu screen
-                game.setScreen(new com.matsemann.libgdxloadingscreen.screen.MainMenuScreen(game));
-            }
+            game.atlas = game.manager.get("thrustcopterassets.txt", TextureAtlas.class);
+            game.font = game.manager.get("impact-40.fnt", BitmapFont.class);
+//            if (Gdx.input.isTouched()) { // If the screen is touched after the game is done loading, go to the main menu screen
+            game.setScreen(new ThrustCopterScene(game));
+//            }
         }
 
         // Interpolate the percentage to make it more smooth
