@@ -33,7 +33,10 @@ public class ThrustCopterScene extends ScreenAdapter {
 
 	Batch batch;
 	Camera camera;
+
 	TextureAtlas atlas;
+	BitmapFont font;
+
 	ThrustCopter game;
 
 	Vector2 planeVelocity, scrollVelocity, planePosition, planeDefaultPosition,
@@ -43,7 +46,6 @@ public class ThrustCopterScene extends ScreenAdapter {
 	Rectangle planeRect, obstacleRect;
 	Vector3 touchPosition, pickupTiming;
 	Pickup tempPickup;
-
 	ParticleEffect smoke, explosion;
 	Music music;
 	Sound tapSound, crashSound, spawnSound;
@@ -57,6 +59,9 @@ public class ThrustCopterScene extends ScreenAdapter {
 	public ThrustCopterScene(ThrustCopter thrustCopter) {
 		game = thrustCopter;
 		batch = game.batch;
+		atlas = game.atlas;
+		font = game.font;
+
 		camera = game.camera;
 		tmpVector = new Vector2();
 		planeVelocity = new Vector2();
@@ -77,39 +82,41 @@ public class ThrustCopterScene extends ScreenAdapter {
 		pickupsInScene = new Array<Pickup>();
 //		camera.setToOrtho(false, 800, 480);
 
+
+
 		smoke = game.manager.get("SmokeM", ParticleEffect.class);
 		explosion = game.manager.get("Explosion", ParticleEffect.class);
 
-		tap2 = atlas.findRegion("tap2");
-		tap1 = atlas.findRegion("tap1");
-		pillarUp = atlas.findRegion("rockGrassUp");
-		pillarDown = atlas.findRegion("rockGrassDown");
+		tap2 = game.atlas.findRegion("tap2");
+		tap1 = game.atlas.findRegion("tap1");
+		pillarUp = game.atlas.findRegion("rockGrassUp");
+		pillarDown = game.atlas.findRegion("rockGrassDown");
 		gameOver = game.manager.get("gameover.png", Texture.class);
 		fuelIndicator = game.manager.get("life.png", Texture.class);
-		bgRegion = atlas.findRegion("background");
-		meteorTextures.add(atlas.findRegion("meteorBrown_med1"));
-		meteorTextures.add(atlas.findRegion("meteorBrown_med2"));
-		meteorTextures.add(atlas.findRegion("meteorBrown_small1"));
-		meteorTextures.add(atlas.findRegion("meteorBrown_small2"));
-		meteorTextures.add(atlas.findRegion("meteorBrown_tiny1"));
-		meteorTextures.add(atlas.findRegion("meteorBrown_tiny2"));
-		terrainBelow = atlas.findRegion("groundGrass");
+		bgRegion = game.atlas.findRegion("background");
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_med1"));
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_med2"));
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_small1"));
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_small2"));
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_tiny1"));
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_tiny2"));
+		terrainBelow = game.atlas.findRegion("groundGrass");
 		terrainAbove = new TextureRegion(terrainBelow);
 		terrainAbove.flip(true, true);
 
 		plane = new Animation(0.05f,
-				atlas.findRegion("planeRed1"),
-				atlas.findRegion("planeRed2"),
-				atlas.findRegion("planeRed3"),
-				atlas.findRegion("planeRed2"));
+				game.atlas.findRegion("planeRed1"),
+				game.atlas.findRegion("planeRed2"),
+				game.atlas.findRegion("planeRed3"),
+				game.atlas.findRegion("planeRed2"));
 		plane.setPlayMode(PlayMode.LOOP);
 
 		shield = new Animation(0.1f,
-				atlas.findRegion("shield1"),
-				atlas.findRegion("shield2"),
-				atlas.findRegion("shield3"),
-				atlas.findRegion("shield2"));
-		plane.setPlayMode(PlayMode.LOOP_PINGPONG);
+				game.atlas.findRegion("shield1"),
+				game.atlas.findRegion("shield2"),
+				game.atlas.findRegion("shield3"),
+				game.atlas.findRegion("shield2"));
+		plane.setPlayMode(PlayMode.LOOP);
 
 		music = game.manager.get("sounds/BMPMus1.mp3", Music.class);
 		music.setLooping(true);

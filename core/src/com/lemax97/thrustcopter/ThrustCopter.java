@@ -2,28 +2,25 @@ package com.lemax97.thrustcopter;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import matsemann.LoadingScreen;
 
 
 public class ThrustCopter extends Game {
 
-    SpriteBatch batch;
-    TextureAtlas atlas;
-    BitmapFont font;
-    OrthographicCamera camera;
-    FPSLogger fpsLogger;
-    Viewport viewport;
-    AssetManager manager = new AssetManager();
+    public SpriteBatch batch;
+    public TextureAtlas atlas;
+    public BitmapFont font;
+    public OrthographicCamera camera;
+    public FPSLogger fpsLogger;
+    public Viewport viewport;
+    public AssetManager manager = new AssetManager();
 
     public static final int screenWidth = 800;
     public static final int screenHeight = 480;
@@ -40,7 +37,7 @@ public class ThrustCopter extends Game {
     @Override
     public void create() {
         batch = new SpriteBatch();
-        setScreen(new ThrustCopterScene(this));
+        setScreen(new LoadingScreen(this));
     }
 
     @Override
@@ -56,8 +53,8 @@ public class ThrustCopter extends Game {
 
     @Override
     public void dispose() {
-        batch.dispose();
         atlas.dispose();
+        batch.dispose();
         manager.dispose();
     }
 }

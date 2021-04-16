@@ -1,10 +1,10 @@
-package com.lemax97.thrustcopter;
+package matsemann;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.GL30;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -15,6 +15,8 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.lemax97.thrustcopter.ThrustCopterScene;
+import com.lemax97.thrustcopter.ThrustCopter;
 
 /**
  * @author Mats Svensson
@@ -93,7 +95,6 @@ public class LoadingScreen extends ScreenAdapter {
         game.manager.load("impact-40.fnt", BitmapFont.class);
         game.manager.load("SmokeM", ParticleEffect.class);
         game.manager.load("Explosion", ParticleEffect.class);
-        game.manager.finishLoading();
     }
 
     @Override
@@ -139,7 +140,7 @@ public class LoadingScreen extends ScreenAdapter {
     @Override
     public void render(float delta) {
         // Clear the screen
-        Gdx.gl.glClear(GL30.GL_COLOR_BUFFER_BIT);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         if (game.manager.update()) { // Load some, will return true if done loading
             game.atlas = game.manager.get("thrustcopterassets.txt", TextureAtlas.class);

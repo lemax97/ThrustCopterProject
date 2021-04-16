@@ -1,4 +1,4 @@
-package com.lemax97.thrustcopter;
+package matsemann;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
