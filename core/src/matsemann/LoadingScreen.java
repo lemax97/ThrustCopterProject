@@ -11,12 +11,17 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Interpolation;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.lemax97.thrustcopter.ThrustCopterScene;
 import com.lemax97.thrustcopter.ThrustCopter;
+
+import static com.lemax97.thrustcopter.ThrustCopter.screenHeight;
+import static com.lemax97.thrustcopter.ThrustCopter.screenWidth;
 
 /**
  * @author Mats Svensson
@@ -100,14 +105,10 @@ public class LoadingScreen extends ScreenAdapter {
     @Override
     public void resize(int width, int height) {
         // Set our screen to always be XXX x 480 in size
-        width = 480 * width / height;
-        height = 480;
-
-        Viewport viewport = this.stage.getViewport();
-        viewport.setScreenWidth(width);
-        viewport.setScreenHeight(height);
-
-        stage.setViewport(viewport);
+//        width = 480 * width / height;
+//        height = 480;
+        Vector2 scaledView = Scaling.fit.apply(screenWidth, screenHeight, width, height);
+        stage.getViewport().update((int) scaledView.x, (int) scaledView.y, true);
 
         // Make the background fill the screen
         screenBg.setSize(width, height);
