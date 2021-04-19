@@ -20,6 +20,8 @@ public class ThrustCopter extends Game {
     public OrthographicCamera camera;
     public FPSLogger fpsLogger;
     public Viewport viewport;
+    public boolean soundEnabled;
+    public float soundVolume;
     public AssetManager manager = new AssetManager();
 
     public static final int screenWidth = 800;
@@ -27,7 +29,8 @@ public class ThrustCopter extends Game {
 
     public ThrustCopter() {
         fpsLogger = new FPSLogger();
-
+        soundEnabled = true;
+        soundVolume = 1.0f;
         camera = new OrthographicCamera();
         camera.position.set(400, 240, 0);
         viewport = new FitViewport(800, 480, camera);

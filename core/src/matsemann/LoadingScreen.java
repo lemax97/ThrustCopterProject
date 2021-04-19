@@ -17,6 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.lemax97.thrustcopter.MenuScene;
 import com.lemax97.thrustcopter.ThrustCopterScene;
 import com.lemax97.thrustcopter.ThrustCopter;
 
@@ -88,6 +89,7 @@ public class LoadingScreen extends ScreenAdapter {
         // game.manager.load("data/assets2.pack", TextureAtlas.class);
         // game.manager.load("data/assets3.pack", TextureAtlas.class);
         game.manager.load("gameover.png", Texture.class);
+        game.manager.load("title.png", Texture.class);
         game.manager.load("life.png", Texture.class);
         game.manager.load("sounds/BMPMus1.mp3", Music.class);
         game.manager.load("sounds/pop.ogg", Sound.class);
@@ -147,7 +149,7 @@ public class LoadingScreen extends ScreenAdapter {
             game.atlas = game.manager.get("thrustcopterassets.txt", TextureAtlas.class);
             game.font = game.manager.get("impact-40.fnt", BitmapFont.class);
 //            if (Gdx.input.isTouched()) { // If the screen is touched after the game is done loading, go to the main menu screen
-            game.setScreen(new ThrustCopterScene(game));
+            game.setScreen(new MenuScene(game));
 //            }
         }
 
@@ -169,5 +171,7 @@ public class LoadingScreen extends ScreenAdapter {
     public void hide() {
         // Dispose the loading assets as we no longer need them
         game.manager.unload("data/loading.pack");
+        game.manager.dispose();
+
     }
 }
