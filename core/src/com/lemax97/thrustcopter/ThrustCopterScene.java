@@ -1,9 +1,6 @@
 package com.lemax97.thrustcopter;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.*;
@@ -14,15 +11,14 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 
-public class ThrustCopterScene extends ScreenAdapter {
+
+public class ThrustCopterScene extends BaseScene {
 	int starCount, fuelPercentage;
 	float terrainOffset, planeAnimTime, tapDrawTime,  deltaPosition, nextMeteorIn, fuelCount, shieldCount, score;
 	//orientation, accelX, accelY, accelZ,
-	boolean leftPressed, meteorInScene;
-	//rightPressed, middlePressed, isSpacePressed,
+	boolean  meteorInScene, gamePaused;
+	//leftPressed, rightPressed, middlePressed, isSpacePressed,
 
 	Texture gameOver, fuelIndicator;
 	TextureRegion bgRegion, terrainBelow, terrainAbove, tap2,
@@ -33,11 +29,8 @@ public class ThrustCopterScene extends ScreenAdapter {
 
 	Batch batch;
 	Camera camera;
-
 	TextureAtlas atlas;
 	BitmapFont font;
-
-	ThrustCopter game;
 
 	Vector2 planeVelocity, scrollVelocity, planePosition, planeDefaultPosition,
 			gravity, tmpVector, lastPillarPosition, meteorPosition, meteorVelocity;
@@ -49,6 +42,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 	ParticleEffect smoke, explosion;
 	Music music;
 	Sound tapSound, crashSound, spawnSound;
+	GameState gameState;
 
 	private static final int TOUCH_IMPULSE=500;
 	private static final float TAP_DRAW_TIME_MAX=1.0f;
@@ -56,13 +50,17 @@ public class ThrustCopterScene extends ScreenAdapter {
 	private static final int METEOR_SPEED = 60;
 	private static final int MAX_FUEL = 114;
 
+	static enum GameState{
+		INIT, ACTION, GAME_OVER
+	}
+
 	public ThrustCopterScene(ThrustCopter thrustCopter) {
-		game = thrustCopter;
+		super(thrustCopter);
 		batch = game.batch;
 		atlas = game.atlas;
 		font = game.font;
-
 		camera = game.camera;
+
 		tmpVector = new Vector2();
 		planeVelocity = new Vector2();
 		planePosition = new Vector2();
@@ -80,9 +78,6 @@ public class ThrustCopterScene extends ScreenAdapter {
 		touchPosition = new Vector3();
 		pickupTiming = new Vector3();
 		pickupsInScene = new Array<Pickup>();
-//		camera.setToOrtho(false, 800, 480);
-
-
 
 		smoke = game.manager.get("SmokeM", ParticleEffect.class);
 		explosion = game.manager.get("Explosion", ParticleEffect.class);
@@ -94,12 +89,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 		gameOver = game.manager.get("gameover.png", Texture.class);
 		fuelIndicator = game.manager.get("life.png", Texture.class);
 		bgRegion = game.atlas.findRegion("background");
-		meteorTextures.add(game.atlas.findRegion("meteorBrown_med1"));
-		meteorTextures.add(game.atlas.findRegion("meteorBrown_med2"));
-		meteorTextures.add(game.atlas.findRegion("meteorBrown_small1"));
-		meteorTextures.add(game.atlas.findRegion("meteorBrown_small2"));
-		meteorTextures.add(game.atlas.findRegion("meteorBrown_tiny1"));
-		meteorTextures.add(game.atlas.findRegion("meteorBrown_tiny2"));
+
 		terrainBelow = game.atlas.findRegion("groundGrass");
 		terrainAbove = new TextureRegion(terrainBelow);
 		terrainAbove.flip(true, true);
@@ -116,24 +106,32 @@ public class ThrustCopterScene extends ScreenAdapter {
 				game.atlas.findRegion("shield2"),
 				game.atlas.findRegion("shield3"),
 				game.atlas.findRegion("shield2"));
-		plane.setPlayMode(PlayMode.LOOP);
+
+		shield.setPlayMode(PlayMode.LOOP);
+
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_med1"));
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_med2"));
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_small1"));
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_small2"));
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_tiny1"));
+		meteorTextures.add(game.atlas.findRegion("meteorBrown_tiny2"));
 
 		music = game.manager.get("sounds/BMPMus1.mp3", Music.class);
 		music.setLooping(true);
-		music.setVolume(0.2f);
-		music.play();
+		music.setVolume(game.soundVolume);
+		if (game.soundEnabled) music.play();
+
 		tapSound =game.manager.get("sounds/pop.ogg", Sound.class);
 		crashSound = game.manager.get("sounds/crash.ogg", Sound.class);
 		spawnSound = game.manager.get("sounds/alarm.ogg", Sound.class);
 		gameState = GameState.INIT;
+		gamePaused = false;
 		resetScene();
 	}
 
-	static enum GameState{
-		INIT, ACTION, GAME_OVER
-	}
 
-	GameState gameState;
+
+
 
 	private void addPillar(){
 		Vector2 pillarPosition = new Vector2();
@@ -159,7 +157,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 			return;
 		}
 		meteorInScene = true;
-		spawnSound.play();
+		if (game.soundEnabled) spawnSound.play(game.soundVolume);
 		int id = (int) (MathUtils.random() * meteorTextures.size);
 		selectedMeteorTexture = meteorTextures.get(id);
 		meteorPosition.x = 810;
@@ -219,7 +217,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 
 	private void pickIt(Pickup pickup)
 	{
-		pickup.pickupSound.play();
+		if (game.soundEnabled) pickup.pickupSound.play(game.soundVolume);
 		switch (pickup.pickupType){
 			case Pickup.STAR:
 				starCount += pickup.pickupValue;
@@ -237,8 +235,11 @@ public class ThrustCopterScene extends ScreenAdapter {
 
 	@Override
 	public void render (float delta) {
+		super.render(delta);
+		if (gamePaused) return;
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
 		updateScene(delta);
 		drawScene();
 	}
@@ -253,7 +254,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 //		middlePressed = Gdx.input.isButtonPressed(Input.Buttons.MIDDLE);
 
 		if (Gdx.input.justTouched()){
-			tapSound.play();
+			if (game.soundEnabled) tapSound.play(game.soundVolume);
 			if (gameState == GameState.INIT){
 				gameState = GameState.ACTION;
 				return;
@@ -421,7 +422,9 @@ public class ThrustCopterScene extends ScreenAdapter {
 
 		if (shieldCount > 0){
 			game.font.draw(batch, "" + ((int) shieldCount), 390, 450);
+			batch.setColor(Color.CYAN);
 			batch.draw((TextureRegion) shield.getKeyFrame(planeAnimTime), planePosition.x - 20, planePosition.y);
+			batch.setColor(Color.WHITE);
 		}
 
 		if (meteorInScene){
@@ -459,8 +462,8 @@ public class ThrustCopterScene extends ScreenAdapter {
 		meteorInScene = false;
 		nextMeteorIn = (float) MathUtils.random() * 5;
 		pickupTiming.x = 1 + (float) MathUtils.random() * 2;
-		pickupTiming.x = 3 + (float) MathUtils.random() * 2;
-		pickupTiming.x = 1 + (float) MathUtils.random() * 3;
+		pickupTiming.y = 3 + (float) MathUtils.random() * 2;
+		pickupTiming.z = 1 + (float) MathUtils.random() * 3;
 		terrainOffset = 0;
 		planeAnimTime = 0;
 		tapDrawTime = 0;
@@ -487,7 +490,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 		if (gameState != GameState.GAME_OVER)
 		{
 			fuelCount = 0;
-			crashSound.play();
+			if (game.soundEnabled) crashSound.play(game.soundVolume);
 			gameState = GameState.GAME_OVER;
 			explosion.reset();
 			explosion.setPosition(planePosition.x + 40, planePosition.y + 40);

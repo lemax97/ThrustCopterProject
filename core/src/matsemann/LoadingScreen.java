@@ -56,7 +56,7 @@ public class LoadingScreen extends ScreenAdapter {
         game.manager.finishLoading();
 
         // Initialize the stage where we will place everything
-        stage = new Stage();
+        stage = new Stage(game.viewport);
 
         // Get our textureatlas from the manager
         TextureAtlas atlas = game.manager.get("data/loading.pack", TextureAtlas.class);
@@ -171,7 +171,12 @@ public class LoadingScreen extends ScreenAdapter {
     public void hide() {
         // Dispose the loading assets as we no longer need them
         game.manager.unload("data/loading.pack");
-        game.manager.dispose();
+//        game.manager.dispose();
 
+    }
+
+    @Override
+    public void dispose() {
+        stage.dispose();
     }
 }
