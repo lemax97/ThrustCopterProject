@@ -57,9 +57,10 @@ public class ThrustCopterScene extends BaseScene {
 	public ThrustCopterScene(ThrustCopter thrustCopter) {
 		super(thrustCopter);
 		batch = game.batch;
+		camera = game.camera;
 		atlas = game.atlas;
 		font = game.font;
-		camera = game.camera;
+
 
 		tmpVector = new Vector2();
 		planeVelocity = new Vector2();
@@ -363,7 +364,7 @@ public class ThrustCopterScene extends BaseScene {
 		tapDrawTime -= deltaTime;
 		nextMeteorIn -= deltaTime;
 
-		checkAndCreatePickup(deltaTime);
+
 
 		if (lastPillarPosition.x < 400){
 			addPillar();
@@ -373,9 +374,9 @@ public class ThrustCopterScene extends BaseScene {
 			launchMeteor();
 		}
 
-		fuelPercentage = (int) (fuelCount * 100 / MAX_FUEL );
+		checkAndCreatePickup(deltaTime);
 		fuelCount -= 6 * deltaTime;
-
+		fuelPercentage = (int) (fuelCount * 100 / MAX_FUEL );
 		shieldCount -= deltaTime;
 		score += deltaTime;
 	}

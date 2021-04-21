@@ -11,11 +11,11 @@ public class Pickup {
     public static final int STAR = 1;
     public static final int SHIELD = 2;
     public static final int FUEL = 3;
-    TextureRegion pickupTexture;
+    public TextureRegion pickupTexture;
     Vector2 pickupPosition = new Vector2();
-    int pickupType;
-    int pickupValue;
-    Sound pickupSound;
+    public int pickupType;
+    public int pickupValue;
+    public Sound pickupSound;
 
     public Pickup(int type, AssetManager manager) {
         TextureAtlas atlas = manager.get("thrustcopterassets.txt", TextureAtlas.class);

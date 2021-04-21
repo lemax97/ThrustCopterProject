@@ -1,7 +1,6 @@
 package com.lemax97.thrustcopter;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
@@ -14,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.lemax97.thrustcopter.Box2D.ThrustCopterSceneBox2D;
 
 public class MenuScene extends BaseScene {
                 Stage stage;
@@ -96,7 +96,7 @@ public class MenuScene extends BaseScene {
        playButton.addListener(new ClickListener() {
            @Override
            public void clicked(InputEvent event, float x, float y) {
-               game.setScreen(new ThrustCopterScene(game));
+               game.setScreen(new ThrustCopterSceneBox2D(game));
            }
        });
 
