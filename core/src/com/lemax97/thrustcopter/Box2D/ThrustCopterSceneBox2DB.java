@@ -278,7 +278,8 @@ public class ThrustCopterSceneBox2DB extends BaseScene {
 		boxBodyDef.position.y = position.y/BOX2D_TO_CAMERA;
 		Body boxBody = world.createBody(boxBodyDef);
 		PolygonShape boxPoly = new PolygonShape();
-		boxPoly.setAsBox(region.getRegionWidth()/(2*BOX2D_TO_CAMERA), region.getRegionHeight()/(2*BOX2D_TO_CAMERA));
+		boxPoly.setAsBox(region.getRegionWidth()/(2*BOX2D_TO_CAMERA),
+				region.getRegionHeight()/(2*BOX2D_TO_CAMERA));
 		
 		FixtureDef fixtureDef = new FixtureDef();
 		fixtureDef.shape = boxPoly;

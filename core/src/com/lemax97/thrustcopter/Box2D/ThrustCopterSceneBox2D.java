@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
@@ -56,7 +57,7 @@ public class ThrustCopterSceneBox2D extends BaseScene {
     TextureAtlas atlas;
     BitmapFont font;
 
-    private static final int BOX2D_TO_CAMERA = 100;
+    private static final int BOX2D_TO_CAMERA = 10;
     private static final boolean DRAW_BOX2D_DEBUG = true;
     private static final int TOUCH_IMPULSE = 1000;
     private static final float TAP_DRAW_TIME_MAX=1.0f;
@@ -189,9 +190,9 @@ public class ThrustCopterSceneBox2D extends BaseScene {
     private void initPhysics() {
         world = new World(new Vector2(5f, -8), true);
         debugRenderer = new Box2DDebugRenderer();
-        box2dCam = new OrthographicCamera(8, 4.8f);
-        box2dCam.position.set(4, 2.4f, 0);
-        previousCamXPos = 4;
+        box2dCam = new OrthographicCamera(80, 48f);
+        box2dCam.position.set(40, 24f, 0);
+        previousCamXPos = 40;
         planeBody = createPhysicsObjectFromGraphics((TextureRegion) plane.getKeyFrame(0),
                 planePosition, BodyType.DynamicBody);
         terrainBodyUp = createPhysicsObjectFromGraphics(terrainAbove, new Vector2(terrainAbove.getRegionWidth()/2,
@@ -200,6 +201,7 @@ public class ThrustCopterSceneBox2D extends BaseScene {
                terrainBelow.getRegionHeight()/2), BodyType.StaticBody);
         meteorBody = createPhysicsObjectFromGraphics(selectedMeteorTexture,
                 new Vector2(800, 500), BodyType.KinematicBody);
+
     }
 
     private Body createPhysicsObjectFromGraphics(TextureRegion region, Vector2 position, BodyType bodyType) {
@@ -217,7 +219,6 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         fixtureDef.density = 1;
         fixtureDef.restitution = 0.2f;
         boxBody.createFixture(fixtureDef);
-
         boxPoly.dispose();
         boxBody.setUserData(region);
         return boxBody;
@@ -226,6 +227,10 @@ public class ThrustCopterSceneBox2D extends BaseScene {
     @Override
     public void render(float delta) {
         super.render(delta);
+        if (gamePaused) return;
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         updateSceneBox2D(delta);
         drawSceneBox2D();
         if (DRAW_BOX2D_DEBUG) {
@@ -288,9 +293,9 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         score += deltaTime;
 
         world.step(deltaTime, 8, 3);
-        box2dCam.position.x = planeBody.getPosition().x + 1.94f;
-        terrainBodyUp.setTransform(box2dCam.position.x + 0.04f, 4.45f, 0);
-        terrainBodyDown.setTransform(box2dCam.position.x + 0.04f, 0.35f, 0);
+        box2dCam.position.x = planeBody.getPosition().x + 19.4f;
+        terrainBodyUp.setTransform(box2dCam.position.x + 0.04f, 44.5f, 0);
+        terrainBodyDown.setTransform(box2dCam.position.x + 0.04f, 3.5f, 0);
     }
 
     private void checkAndCreatePickup(float delta) {
