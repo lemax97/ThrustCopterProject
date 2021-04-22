@@ -286,6 +286,15 @@ public class ThrustCopterSceneBox2D extends BaseScene {
             terrainOffset = -terrainBelow.getRegionWidth();
         }
 
+        if(lastPillarBody.getPosition().x<box2dCam.position.x){
+            addPillar();
+        }
+        tapDrawTime-=deltaTime;
+        nextMeteorIn-=deltaTime;
+        if(nextMeteorIn<=0){
+            launchMeteor();
+        }
+
         checkAndCreatePickup(deltaTime);
         fuelCount -= 6 * deltaTime;
         fuelPercentage = (int) (fuelCount * 100 / MAX_FUEL );
@@ -349,11 +358,11 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         PolygonShape trianglePoly = new PolygonShape();
 
         if (region == pillarUp) {
-            float[] vertices = {-0.54f, -1.195f, 0.11f, 1.195f, 0.54f, -1.195f};
+            float[] vertices = {-5.4f, -11.95f, 1.1f, 11.95f, 5.4f, -11.95f};
             trianglePoly.set(vertices);
         }
         else {
-            float[] vertices = {-0.54f, 1.195f, 0.54f, 1.195f, 0.11f, -1.195f};
+            float[] vertices = {-5.4f, 11.95f, 5.4f, 11.95f, 1.1f, -11.95f};
             trianglePoly.set(vertices);
         }
         boxBody.createFixture(trianglePoly, 1);
@@ -365,13 +374,13 @@ public class ThrustCopterSceneBox2D extends BaseScene {
     private void launchMeteor() {
         nextMeteorIn = 1.5f + (float) MathUtils.random() * 5;
         if (meteorInScene) return;
-        tmpVector.set(box2dCam.position.x + 4.2f, 0);
+        tmpVector.set(box2dCam.position.x + 42f, 0);
         if (game.soundEnabled) spawnSound.play(game.soundVolume);
         meteorInScene = true;
         tmpVector.y = (float) (80 + MathUtils.random() * 320) / BOX2D_TO_CAMERA;
         meteorBody.setTransform(tmpVector, 0);
         Vector2 destination = new Vector2();
-        destination.x = box2dCam.position.x - 4.2f;
+        destination.x = box2dCam.position.x - 42f;
         destination.y = (float) (80 + MathUtils.random() * 320) / BOX2D_TO_CAMERA;
         destination.sub(tmpVector).nor();
         destination.scl(METEOR_SPEED);
