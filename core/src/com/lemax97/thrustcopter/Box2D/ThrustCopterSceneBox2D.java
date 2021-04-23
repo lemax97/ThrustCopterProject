@@ -227,6 +227,11 @@ public class ThrustCopterSceneBox2D extends BaseScene {
                     ItemType itemType = getItemType(unknownBody);
                     if (itemType == ItemType.TERRAIN){
                         endGame();
+                    } else if (shieldCount <= 0 && (itemType == ItemType.METEOR ||
+                            itemType == ItemType.PILLAR)) {
+                        endGame();
+                    } else if (itemType == ItemType.PICK_UP) {
+                        pickIt(unknownBody);
                     }
                 }
             }
@@ -242,6 +247,9 @@ public class ThrustCopterSceneBox2D extends BaseScene {
             }
         });
 
+    }
+
+    private void pickIt(Body pickupBody) {
     }
 
     private void endGame() {
