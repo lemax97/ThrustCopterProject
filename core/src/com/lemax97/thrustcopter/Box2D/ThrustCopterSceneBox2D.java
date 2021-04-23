@@ -171,17 +171,18 @@ public class ThrustCopterSceneBox2D extends BaseScene {
             world.destroyBody(vec);
         }
         pillars.clear();
-        for(Body vec: pickupsInScene) {
-            world.destroyBody(vec);
-        }
-        pickupsInScene.clear();
+//        for(Body vec: pickupsInScene) {
+//            world.destroyBody(vec);
+//        }
+//        pickupsInScene.clear();
         tmpVector.set(800,500);
         meteorBody.setTransform(tmpVector,0);
         tmpVector.set(planePosition);
-        planeBody.setTransform(tmpVector.x/BOX2D_TO_CAMERA,tmpVector.y/BOX2D_TO_CAMERA, 0);
+        planeBody.setTransform(tmpVector.x / BOX2D_TO_CAMERA,tmpVector.y / BOX2D_TO_CAMERA, 0);
         planeBody.setAwake(true);
         box2dCam.position.set(40, 24, 0);
         previousCamXPos=40;
+
         terrainBodyUp.setTransform(box2dCam.position.x+0.4f, 44.5f, 0);
         terrainBodyDown.setTransform(box2dCam.position.x+0.4f, 3.5f, 0);
         lastPillarBody=null;
@@ -238,6 +239,25 @@ public class ThrustCopterSceneBox2D extends BaseScene {
 
             @Override
             public void preSolve(Contact contact, Manifold oldManifold) {
+                bodyA = contact.getFixtureA().getBody();
+                bodyB = contact.getFixtureB().getBody();
+                boolean planeFound = false;
+                if (bodyA.equals(planeBody)) {
+                    planeFound = true;
+                    unknownBody = bodyB;
+                } else if (bodyB.equals(planeBody)) {
+                    planeFound = true;
+                    unknownBody = bodyA;
+                }
+                if (planeFound) {
+                    ItemType itemType = getItemType(unknownBody);
+                    if (shieldCount > 0 && (itemType == ItemType.METEOR ||
+                            itemType == ItemType.PILLAR)) {
+                        contact.setEnabled(false);
+                    } else if (itemType == ItemType.PICK_UP) {
+                        contact.setEnabled(false);
+                    }
+                }
 
             }
 
@@ -266,7 +286,7 @@ public class ThrustCopterSceneBox2D extends BaseScene {
     }
 
     private ItemType getItemType(Body body) {
-        return ItemType.PICK_UP;
+        return ItemType.PILLAR;
     }
 
     private Body createPhysicsObjectFromGraphics(TextureRegion region, Vector2 position, BodyType bodyType) {
@@ -336,6 +356,14 @@ public class ThrustCopterSceneBox2D extends BaseScene {
             batch.draw(gameOver, 400-206, 240-80);
         }
 
+        for(Body pickup: pickupsInScene) {
+            tempPickup=(Pickup)pickup.getUserData();
+            tmpVector.set(pickup.getPosition());
+            tmpVector.scl(BOX2D_TO_CAMERA);
+            tmpVector.x-=(box2dCam.position.x-40)*BOX2D_TO_CAMERA;
+            batch.draw(tempPickup.pickupTexture, tmpVector.x-19, tmpVector.y-19);
+        }
+
         planePosition = planeBody.getPosition();
         planePosition.scl(BOX2D_TO_CAMERA);
         smoke.setPosition(planePosition.x + 20 - (box2dCam.position.x - 40) * BOX2D_TO_CAMERA - 44,
@@ -348,6 +376,7 @@ public class ThrustCopterSceneBox2D extends BaseScene {
                     (box2dCam.position.x - 40) * BOX2D_TO_CAMERA - 44, planePosition.y - 36.5f);
             font.draw(batch, "" + ((int) shieldCount), 390 , 450);
         }
+
         if (meteorInScene) {
             batch.draw(selectedMeteorTexture, meteorPosition.x - (box2dCam.position.x - 40) *
                     BOX2D_TO_CAMERA - selectedMeteorTexture.getRegionWidth() / 2, meteorPosition.y -
@@ -447,7 +476,37 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         }
     }
 
+    /**  we instantiate this vector and the callback here so we don't irritate the GC  **/
+    Vector3 testPoint = new Vector3();
+    QueryCallback callback = new QueryCallback() {
+        @Override
+        public boolean reportFixture(Fixture fixture) {
+            // if the hit point is inside the fixture of the body
+            // we report it
+            if (fixture.testPoint(testPoint.x, testPoint.y)) {
+                hitBody = fixture.getBody();
+                return false;
+            } else return true;
+        }
+    };
+
     private boolean addPickup(int pickupType) {
+        testPoint.x = box2dCam.position.x + 42f;
+        testPoint.y = (float) (80 + MathUtils.random() * 320) / BOX2D_TO_CAMERA;
+
+        hitBody = null;
+        world.QueryAABB(callback, testPoint.x - 1.9f, testPoint.y - 1.9f, testPoint.x + 1.9f,
+                testPoint.y + 1.9f);
+
+        if (hitBody != null) {
+            return false;
+        }
+        testPoint.scl(BOX2D_TO_CAMERA);
+        tempPickup = new Pickup(pickupType, game.manager);
+        Body pickupBody=createPhysicsObjectFromGraphics(tempPickup.pickupTexture,
+                new Vector2(testPoint.x,testPoint.y),BodyType.StaticBody);
+        pickupBody.setUserData(tempPickup);
+        pickupsInScene.add(pickupBody);
         return  true;
     }
 
