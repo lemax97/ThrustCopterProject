@@ -3,10 +3,7 @@ package com.lemax97.thrustcopter.Box2D;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
@@ -48,7 +45,7 @@ public class ThrustCopterSceneBox2D extends BaseScene {
 
     Texture gameOver, fuelIndicator;
     TextureRegion bgRegion, terrainBelow, terrainAbove, tap2,
-            tap1, pillarUp, pillarDown, selectedMeteorTexture;
+            tap1, pillarUp, pillarDown, selectedMeteorTexture, toDraw;
     Animation plane;
     Animation shield;
 
@@ -66,6 +63,10 @@ public class ThrustCopterSceneBox2D extends BaseScene {
 
     static enum GameState{
         INIT, ACTION, GAME_OVER
+    }
+
+    static enum ItemType{
+        PICK_UP, TERRAIN, METEOR, PILLAR
     }
 
     public ThrustCopterSceneBox2D(ThrustCopter thrustCopter) {
@@ -202,6 +203,62 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         meteorBody = createPhysicsObjectFromGraphics(selectedMeteorTexture,
                 new Vector2(800, 500), BodyType.KinematicBody);
 
+        //colliding begins here
+
+        world.setContactListener(new ContactListener() {
+            @Override
+            public void beginContact(Contact contact) {
+
+            }
+
+            @Override
+            public void endContact(Contact contact) {
+                bodyA = contact.getFixtureA().getBody();
+                bodyB = contact.getFixtureB().getBody();
+                boolean planeFound = false;
+                if (bodyA.equals(planeBody)){
+                    planeFound = true;
+                    unknownBody = bodyB;
+                } else if (bodyB.equals(planeBody)){
+                    planeFound = true;
+                    unknownBody = bodyA;
+                }
+                if (planeFound){
+                    ItemType itemType = getItemType(unknownBody);
+                    if (itemType == ItemType.TERRAIN){
+                        endGame();
+                    }
+                }
+            }
+
+            @Override
+            public void preSolve(Contact contact, Manifold oldManifold) {
+
+            }
+
+            @Override
+            public void postSolve(Contact contact, ContactImpulse impulse) {
+
+            }
+        });
+
+    }
+
+    private void endGame() {
+        if (gameState != GameState.GAME_OVER){
+            if (game.soundEnabled) crashSound.play(game.soundVolume);
+            planeBody.setAwake(false);
+            gameState = GameState.GAME_OVER;
+            explosion.reset();
+            planePosition = planeBody.getPosition();
+            planePosition.scl(BOX2D_TO_CAMERA);
+            explosion.setPosition(planePosition.x - (box2dCam.position.x - 40) * BOX2D_TO_CAMERA + 10,
+                    planePosition.y);
+        }
+    }
+
+    private ItemType getItemType(Body body) {
+        return ItemType.PICK_UP;
     }
 
     private Body createPhysicsObjectFromGraphics(TextureRegion region, Vector2 position, BodyType bodyType) {
@@ -240,6 +297,62 @@ public class ThrustCopterSceneBox2D extends BaseScene {
     }
 
     private void drawSceneBox2D() {
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        batch.disableBlending();
+        batch.draw(bgRegion,0,0);
+        batch.enableBlending();
+
+        for (Body vec: pillars){
+            tmpVector.set(vec.getPosition());
+            tmpVector.scl(BOX2D_TO_CAMERA);
+            tmpVector.x -= (box2dCam.position.x - 40) * BOX2D_TO_CAMERA;
+            toDraw = (TextureRegion) vec.getUserData();
+            batch.draw(toDraw, tmpVector.x - toDraw.getRegionWidth() / 2,
+                    tmpVector.y - toDraw.getRegionHeight() / 2);
+        }
+
+        batch.draw(terrainBelow, terrainOffset, 0);
+        batch.draw(terrainBelow, terrainOffset + terrainBelow.getRegionWidth(), 0);
+        batch.draw(terrainAbove, terrainOffset, 480 - terrainAbove.getRegionHeight());
+        batch.draw(terrainAbove, terrainOffset + terrainAbove.getRegionWidth(), 480 - terrainAbove.getRegionHeight());
+
+        if(tapDrawTime>0){
+            batch.draw(tap2, touchPosition.x-29.5f, touchPosition.y-29.5f);
+        }
+        if(gameState == GameState.INIT){
+            batch.draw(tap1, planePosition.x, planePosition.y-80);
+        }
+        if(gameState == GameState.GAME_OVER){
+            batch.draw(gameOver, 400-206, 240-80);
+        }
+
+        planePosition = planeBody.getPosition();
+        planePosition.scl(BOX2D_TO_CAMERA);
+        smoke.setPosition(planePosition.x + 20 - (box2dCam.position.x - 40) * BOX2D_TO_CAMERA - 44,
+                planePosition.y - 7);
+        smoke.draw(batch);
+        batch.draw((TextureRegion) plane.getKeyFrame(planeAnimTime), planePosition.x - (box2dCam.position.x - 40) *
+                BOX2D_TO_CAMERA - 44, planePosition.y - 36.5f);
+        if (shieldCount > 0) {
+            batch.draw((TextureRegion) shield.getKeyFrame(planeAnimTime), planePosition.x - 20 -
+                    (box2dCam.position.x - 40) * BOX2D_TO_CAMERA - 44, planePosition.y - 36.5f);
+            font.draw(batch, "" + ((int) shieldCount), 390 , 450);
+        }
+        if (meteorInScene) {
+            batch.draw(selectedMeteorTexture, meteorPosition.x - (box2dCam.position.x - 40) *
+                    BOX2D_TO_CAMERA - selectedMeteorTexture.getRegionWidth() / 2, meteorPosition.y -
+                    selectedMeteorTexture.getRegionHeight() / 2);
+        }
+
+        font.draw(batch, ""+(int)(starCount+score), 700, 450);
+        batch.setColor(Color.BLACK);
+        batch.draw(fuelIndicator, 10, 350);
+        batch.setColor(Color.WHITE);
+        batch.draw(fuelIndicator,10,350,0,0,fuelPercentage,119);
+        if(gameState == GameState.GAME_OVER)explosion.draw(batch);
+        batch.end();
     }
 
     private void updateSceneBox2D(float deltaTime) {

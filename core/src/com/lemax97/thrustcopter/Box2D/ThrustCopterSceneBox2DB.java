@@ -438,13 +438,17 @@ public class ThrustCopterSceneBox2DB extends BaseScene {
 		planePosition.scl(BOX2D_TO_CAMERA);
 		smoke.setPosition(planePosition.x+20-(box2dCam.position.x-40)*BOX2D_TO_CAMERA-44, planePosition.y-7);
 		smoke.draw(batch);
-		batch.draw((TextureRegion) plane.getKeyFrame(planeAnimTime), planePosition.x-(box2dCam.position.x-40)*BOX2D_TO_CAMERA-44, planePosition.y-36.5f);
+		batch.draw((TextureRegion) plane.getKeyFrame(planeAnimTime),
+				planePosition.x-(box2dCam.position.x-40)*BOX2D_TO_CAMERA-44, planePosition.y-36.5f);
 		if(shieldCount>0){
-			batch.draw((TextureRegion) shield.getKeyFrame(planeAnimTime), planePosition.x-20-(box2dCam.position.x-40)*BOX2D_TO_CAMERA-44, planePosition.y-36.5f);
+			batch.draw((TextureRegion) shield.getKeyFrame(planeAnimTime),
+					planePosition.x-20-(box2dCam.position.x-40)*BOX2D_TO_CAMERA-44, planePosition.y-36.5f);
 			font.draw(batch, ""+((int)shieldCount), 390, 450);
 		}
 		if(meteorInScene){
-			batch.draw(selectedMeteorTexture,meteorPosition.x-(box2dCam.position.x-40)*BOX2D_TO_CAMERA-selectedMeteorTexture.getRegionWidth()/2,meteorPosition.y-selectedMeteorTexture.getRegionHeight()/2);
+			batch.draw(selectedMeteorTexture,meteorPosition.x
+					-(box2dCam.position.x-40)*BOX2D_TO_CAMERA-selectedMeteorTexture.getRegionWidth()/2,
+					meteorPosition.y-selectedMeteorTexture.getRegionHeight()/2);
 		}
 		font.draw(batch, ""+(int)(starCount+score), 700, 450);
 		batch.setColor(Color.BLACK);
