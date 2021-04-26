@@ -15,7 +15,6 @@ import com.badlogic.gdx.utils.Array;
 import com.lemax97.thrustcopter.BaseScene;
 import com.lemax97.thrustcopter.Pickup;
 import com.lemax97.thrustcopter.ThrustCopter;
-import com.lemax97.thrustcopter.ThrustCopterScene;
 
 public class ThrustCopterSceneBox2D extends BaseScene {
     int starCount, fuelPercentage;
@@ -31,9 +30,9 @@ public class ThrustCopterSceneBox2D extends BaseScene {
 
     Vector2 planeVelocity, scrollVelocity, planePosition, planeDefaultPosition,
             gravity, tmpVector, lastPillarPosition, meteorPosition, meteorVelocity;
-    Array<Body> pickupsInScene = new Array<Body>();
-    Array<Body> pillars = new Array<Body>();
-    Array<Body> setForRemoval = new Array<Body>();
+    Array<Body> pickupsInScene;
+    Array<Body> pillars;
+    Array<Body> setForRemoval;
 
     Rectangle planeRect, obstacleRect;
     Vector3 touchPosition, pickupTiming, touchPositionBox2D;
@@ -46,8 +45,8 @@ public class ThrustCopterSceneBox2D extends BaseScene {
     Texture gameOver, fuelIndicator;
     TextureRegion bgRegion, terrainBelow, terrainAbove, tap2,
             tap1, pillarUp, pillarDown, selectedMeteorTexture, toDraw;
-    Animation plane;
-    Animation shield;
+    Animation<TextureAtlas.AtlasRegion> plane;
+    Animation<TextureAtlas.AtlasRegion> shield;
 
     Batch batch;
     Camera camera;
@@ -61,11 +60,11 @@ public class ThrustCopterSceneBox2D extends BaseScene {
     private static final int METEOR_SPEED = 60;
     private static final int MAX_FUEL = 114;
 
-    static enum GameState{
+    enum GameState{
         INIT, ACTION, GAME_OVER
     }
 
-    static enum ItemType{
+    enum ItemType{
         PICK_UP, TERRAIN, METEOR, PILLAR
     }
 
@@ -87,9 +86,9 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         touchPosition = new Vector3();
         pickupTiming = new Vector3();
         touchPositionBox2D = new Vector3();
-        pillars = new Array<Body>();
-        pickupsInScene = new Array<Body>();
-        setForRemoval = new Array<Body>();
+        pillars = new Array<>();
+        pickupsInScene = new Array<>();
+        setForRemoval = new Array<>();
 
         gameState =  GameState.INIT;
         gamePaused = false;
@@ -99,32 +98,33 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         atlas = game.atlas;
         font = game.font;
 
-        tap2 = game.atlas.findRegion("tap2");
-        tap1 = game.atlas.findRegion("tap1");
-        pillarUp = game.atlas.findRegion("rockGrassUp");
-        pillarDown = game.atlas.findRegion("rockGrassDown");
+        tap2 = atlas.findRegion("tap2");
+        tap1 = atlas.findRegion("tap1");
+        pillarUp = atlas.findRegion("rockGrassUp");
+        pillarDown = atlas.findRegion("rockGrassDown");
         gameOver = game.manager.get("gameover.png", Texture.class);
         fuelIndicator = game.manager.get("life.png", Texture.class);
-        bgRegion = game.atlas.findRegion("background");
-        terrainBelow = game.atlas.findRegion("groundGrass");
+        bgRegion = atlas.findRegion("background");
+        terrainBelow = atlas.findRegion("groundGrass");
         terrainAbove = new TextureRegion(terrainBelow);
         terrainAbove.flip(true, true);
 
-        plane = new Animation(0.05f,
-                game.atlas.findRegion("planeRed1"),
-                game.atlas.findRegion("planeRed2"),
-                game.atlas.findRegion("planeRed3"),
-                game.atlas.findRegion("planeRed2"));
+        plane = new Animation<>(0.05f,
+                atlas.findRegion("planeRed1"),
+                atlas.findRegion("planeRed2"),
+                atlas.findRegion("planeRed3"),
+                atlas.findRegion("planeRed2"));
         plane.setPlayMode(Animation.PlayMode.LOOP);
 
-        shield = new Animation(0.1f,
-                game.atlas.findRegion("shield1"),
-                game.atlas.findRegion("shield2"),
-                game.atlas.findRegion("shield3"),
-                game.atlas.findRegion("shield2"));
+        shield = new Animation<>(0.1f,
+                atlas.findRegion("shield1"),
+                atlas.findRegion("shield2"),
+                atlas.findRegion("shield3"),
+                atlas.findRegion("shield2"));
         shield.setPlayMode(Animation.PlayMode.LOOP);
 
         selectedMeteorTexture = atlas.findRegion("meteorBrown_med1");
+
         if (game.soundEnabled) {
             music = game.manager.get("sounds/BMPMus1.mp3", Music.class);
             music.setLooping(true);
@@ -147,10 +147,10 @@ public class ThrustCopterSceneBox2D extends BaseScene {
 
     private void resetScene() {
         meteorInScene = false;
-        nextMeteorIn = (float) MathUtils.random() * 5;
-        pickupTiming.x = 1 + (float) MathUtils.random() * 2;
-        pickupTiming.y = 3 + (float) MathUtils.random() * 2;
-        pickupTiming.z = 1 + (float) MathUtils.random() * 3;
+        nextMeteorIn = MathUtils.random() * 5;
+        pickupTiming.x = 1 + MathUtils.random() * 2;
+        pickupTiming.y = 3 + MathUtils.random() * 2;
+        pickupTiming.z = 1 + MathUtils.random() * 3;
         terrainOffset = 0;
         planeAnimTime = 0;
         tapDrawTime = 0;
@@ -159,7 +159,7 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         shieldCount = 15;
         fuelCount = MAX_FUEL;
         fuelPercentage = 100;
-        planeDefaultPosition.set(250 - 88/2, 240 - 73/2);
+        planeDefaultPosition.set(250 - 88f/2f, 240 - 73f/2f);
         planePosition.set(planeDefaultPosition.x
                 , planeDefaultPosition.y);
         smoke.setPosition(planePosition.x + 20, planePosition.y + 30);
@@ -167,18 +167,15 @@ public class ThrustCopterSceneBox2D extends BaseScene {
     }
 
     private void resetPhysics() {
-        for(Body vec: pillars) {
-            world.destroyBody(vec);
-        }
+        for(Body vec: pillars) world.destroyBody(vec);
         pillars.clear();
-//        for(Body vec: pickupsInScene) {
-//            world.destroyBody(vec);
-//        }
-//        pickupsInScene.clear();
+        for(Body vec: pickupsInScene) world.destroyBody(vec);
+        pickupsInScene.clear();
         tmpVector.set(800,500);
         meteorBody.setTransform(tmpVector,0);
         tmpVector.set(planePosition);
-        planeBody.setTransform(tmpVector.x / BOX2D_TO_CAMERA,tmpVector.y / BOX2D_TO_CAMERA, 0);
+        planeBody.setTransform(tmpVector.x / BOX2D_TO_CAMERA,
+                tmpVector.y / BOX2D_TO_CAMERA, 0);
         planeBody.setAwake(true);
         box2dCam.position.set(40, 24, 0);
         previousCamXPos=40;
@@ -195,12 +192,12 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         box2dCam = new OrthographicCamera(80, 48f);
         box2dCam.position.set(40, 24f, 0);
         previousCamXPos = 40;
-        planeBody = createPhysicsObjectFromGraphics((TextureRegion) plane.getKeyFrame(0),
+        planeBody = createPhysicsObjectFromGraphics(plane.getKeyFrame(0),
                 planePosition, BodyType.DynamicBody);
-        terrainBodyUp = createPhysicsObjectFromGraphics(terrainAbove, new Vector2(terrainAbove.getRegionWidth()/2,
-                480 - terrainAbove.getRegionHeight() / 2), BodyType.StaticBody);
-        terrainBodyDown = createPhysicsObjectFromGraphics(terrainBelow, new Vector2(terrainBelow.getRegionWidth()/2,
-               terrainBelow.getRegionHeight()/2), BodyType.StaticBody);
+        terrainBodyUp = createPhysicsObjectFromGraphics(terrainAbove, new Vector2(terrainAbove.getRegionWidth()/2f,
+                480 - terrainAbove.getRegionHeight() / 2f), BodyType.StaticBody);
+        terrainBodyDown = createPhysicsObjectFromGraphics(terrainBelow, new Vector2(terrainBelow.getRegionWidth()/2f,
+               terrainBelow.getRegionHeight()/2f), BodyType.StaticBody);
         meteorBody = createPhysicsObjectFromGraphics(selectedMeteorTexture,
                 new Vector2(800, 500), BodyType.KinematicBody);
 
@@ -269,25 +266,8 @@ public class ThrustCopterSceneBox2D extends BaseScene {
 
     }
 
-    private void pickIt(Body pickupBody) {
-    }
 
-    private void endGame() {
-        if (gameState != GameState.GAME_OVER){
-            if (game.soundEnabled) crashSound.play(game.soundVolume);
-            planeBody.setAwake(false);
-            gameState = GameState.GAME_OVER;
-            explosion.reset();
-            planePosition = planeBody.getPosition();
-            planePosition.scl(BOX2D_TO_CAMERA);
-            explosion.setPosition(planePosition.x - (box2dCam.position.x - 40) * BOX2D_TO_CAMERA + 10,
-                    planePosition.y);
-        }
-    }
 
-    private ItemType getItemType(Body body) {
-        return ItemType.PILLAR;
-    }
 
     private Body createPhysicsObjectFromGraphics(TextureRegion region, Vector2 position, BodyType bodyType) {
         BodyDef boxBodyDef = new BodyDef();
@@ -296,8 +276,8 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         boxBodyDef.position.y = position.y / BOX2D_TO_CAMERA;
         Body boxBody = world.createBody(boxBodyDef);
         PolygonShape boxPoly = new PolygonShape();
-        boxPoly.setAsBox(region.getRegionWidth()/(2 * BOX2D_TO_CAMERA),
-                region.getRegionHeight()/(2 * BOX2D_TO_CAMERA));
+        boxPoly.setAsBox(region.getRegionWidth()/(2f * BOX2D_TO_CAMERA),
+                region.getRegionHeight()/(2f * BOX2D_TO_CAMERA));
 
         FixtureDef fixtureDef = new FixtureDef();
         fixtureDef.shape = boxPoly;
@@ -322,74 +302,6 @@ public class ThrustCopterSceneBox2D extends BaseScene {
             box2dCam.update();
             debugRenderer.render(world, box2dCam.combined);
         }
-    }
-
-    private void drawSceneBox2D() {
-        camera.update();
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-        batch.disableBlending();
-        batch.draw(bgRegion,0,0);
-        batch.enableBlending();
-
-        for (Body vec: pillars){
-            tmpVector.set(vec.getPosition());
-            tmpVector.scl(BOX2D_TO_CAMERA);
-            tmpVector.x -= (box2dCam.position.x - 40) * BOX2D_TO_CAMERA;
-            toDraw = (TextureRegion) vec.getUserData();
-            batch.draw(toDraw, tmpVector.x - toDraw.getRegionWidth() / 2,
-                    tmpVector.y - toDraw.getRegionHeight() / 2);
-        }
-
-        batch.draw(terrainBelow, terrainOffset, 0);
-        batch.draw(terrainBelow, terrainOffset + terrainBelow.getRegionWidth(), 0);
-        batch.draw(terrainAbove, terrainOffset, 480 - terrainAbove.getRegionHeight());
-        batch.draw(terrainAbove, terrainOffset + terrainAbove.getRegionWidth(), 480 - terrainAbove.getRegionHeight());
-
-        if(tapDrawTime>0){
-            batch.draw(tap2, touchPosition.x-29.5f, touchPosition.y-29.5f);
-        }
-        if(gameState == GameState.INIT){
-            batch.draw(tap1, planePosition.x, planePosition.y-80);
-        }
-        if(gameState == GameState.GAME_OVER){
-            batch.draw(gameOver, 400-206, 240-80);
-        }
-
-        for(Body pickup: pickupsInScene) {
-            tempPickup=(Pickup)pickup.getUserData();
-            tmpVector.set(pickup.getPosition());
-            tmpVector.scl(BOX2D_TO_CAMERA);
-            tmpVector.x-=(box2dCam.position.x-40)*BOX2D_TO_CAMERA;
-            batch.draw(tempPickup.pickupTexture, tmpVector.x-19, tmpVector.y-19);
-        }
-
-        planePosition = planeBody.getPosition();
-        planePosition.scl(BOX2D_TO_CAMERA);
-        smoke.setPosition(planePosition.x + 20 - (box2dCam.position.x - 40) * BOX2D_TO_CAMERA - 44,
-                planePosition.y - 7);
-        smoke.draw(batch);
-        batch.draw((TextureRegion) plane.getKeyFrame(planeAnimTime), planePosition.x - (box2dCam.position.x - 40) *
-                BOX2D_TO_CAMERA - 44, planePosition.y - 36.5f);
-        if (shieldCount > 0) {
-            batch.draw((TextureRegion) shield.getKeyFrame(planeAnimTime), planePosition.x - 20 -
-                    (box2dCam.position.x - 40) * BOX2D_TO_CAMERA - 44, planePosition.y - 36.5f);
-            font.draw(batch, "" + ((int) shieldCount), 390 , 450);
-        }
-
-        if (meteorInScene) {
-            batch.draw(selectedMeteorTexture, meteorPosition.x - (box2dCam.position.x - 40) *
-                    BOX2D_TO_CAMERA - selectedMeteorTexture.getRegionWidth() / 2, meteorPosition.y -
-                    selectedMeteorTexture.getRegionHeight() / 2);
-        }
-
-        font.draw(batch, ""+(int)(starCount+score), 700, 450);
-        batch.setColor(Color.BLACK);
-        batch.draw(fuelIndicator, 10, 350);
-        batch.setColor(Color.WHITE);
-        batch.draw(fuelIndicator,10,350,0,0,fuelPercentage,119);
-        if(gameState == GameState.GAME_OVER)explosion.draw(batch);
-        batch.end();
     }
 
     private void updateSceneBox2D(float deltaTime) {
@@ -457,22 +369,155 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         terrainBodyDown.setTransform(box2dCam.position.x + 0.04f, 3.5f, 0);
     }
 
+    private void drawSceneBox2D() {
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        batch.disableBlending();
+        batch.draw(bgRegion,0,0);
+        batch.enableBlending();
+
+        for (Body vec: pillars){
+            tmpVector.set(vec.getPosition());
+            tmpVector.scl(BOX2D_TO_CAMERA);
+            tmpVector.x -= (box2dCam.position.x - 40) * BOX2D_TO_CAMERA;
+            toDraw = (TextureRegion) vec.getUserData();
+            batch.draw(toDraw, tmpVector.x - toDraw.getRegionWidth() / 2f,
+                    tmpVector.y - toDraw.getRegionHeight() / 2f);
+        }
+
+        batch.draw(terrainBelow, terrainOffset, 0);
+        batch.draw(terrainBelow, terrainOffset + terrainBelow.getRegionWidth(), 0);
+        batch.draw(terrainAbove, terrainOffset, 480 - terrainAbove.getRegionHeight());
+        batch.draw(terrainAbove, terrainOffset + terrainAbove.getRegionWidth(), 480 - terrainAbove.getRegionHeight());
+
+        if(tapDrawTime>0){
+            batch.draw(tap2, touchPosition.x-29.5f, touchPosition.y-29.5f);
+        }
+        if(gameState == GameState.INIT){
+            batch.draw(tap1, planePosition.x, planePosition.y-80);
+        }
+        if(gameState == GameState.GAME_OVER){
+            batch.draw(gameOver, 400-206, 240-80);
+        }
+
+        for(Body pickup: pickupsInScene) {
+            tempPickup=(Pickup)pickup.getUserData();
+            tmpVector.set(pickup.getPosition());
+            tmpVector.scl(BOX2D_TO_CAMERA);
+            tmpVector.x-=(box2dCam.position.x-40)*BOX2D_TO_CAMERA;
+            batch.draw(tempPickup.pickupTexture, tmpVector.x-19, tmpVector.y-19);
+        }
+
+        planePosition = planeBody.getPosition();
+        planePosition.scl(BOX2D_TO_CAMERA);
+        smoke.setPosition(planePosition.x + 20 - (box2dCam.position.x - 40) * BOX2D_TO_CAMERA - 44,
+                planePosition.y - 7);
+        smoke.draw(batch);
+        batch.draw(plane.getKeyFrame(planeAnimTime), planePosition.x - (box2dCam.position.x - 40) *
+                BOX2D_TO_CAMERA - 44, planePosition.y - 36.5f);
+        if (shieldCount > 0) {
+            batch.setColor(Color.CYAN);
+            batch.draw(shield.getKeyFrame(planeAnimTime), planePosition.x - 20 -
+                    (box2dCam.position.x - 40) * BOX2D_TO_CAMERA - 44, planePosition.y - 36.5f);
+            batch.setColor(Color.WHITE);
+
+            font.draw(batch, "" + ((int) shieldCount), 390 , 450);
+        }
+
+        if (meteorInScene) {
+            batch.draw(selectedMeteorTexture, meteorPosition.x - (box2dCam.position.x - 40) *
+                    BOX2D_TO_CAMERA - selectedMeteorTexture.getRegionWidth() / 2f, meteorPosition.y -
+                    selectedMeteorTexture.getRegionHeight() / 2f);
+        }
+
+        font.draw(batch, ""+(int)(starCount+score), 700, 450);
+        batch.setColor(Color.BLACK);
+        batch.draw(fuelIndicator, 10, 350);
+        batch.setColor(Color.WHITE);
+//        batch.draw(fuelIndicator,10,350,0,0,fuelPercentage,119);
+        batch.draw(fuelIndicator, 10, 350, 0, 0,
+                fuelIndicator.getWidth() * fuelPercentage/100, 119);
+        if(gameState == GameState.GAME_OVER)explosion.draw(batch);
+        batch.end();
+    }
+
+    private void addPillar() {
+        if (pillars.size == 0){
+            tmpVector.x = 800 + MathUtils.random() * 400;
+        } else {
+            tmpVector.x = lastPillarBody.getPosition().x * BOX2D_TO_CAMERA
+                    + (600 + MathUtils.random() * 400);
+        }
+        Body pillar;
+        if (MathUtils.randomBoolean()){
+            pillar = createPillarBody(pillarUp, new Vector2(tmpVector.x +
+                    pillarUp.getRegionWidth() / 2f,
+                    pillarUp.getRegionHeight() / 2f));
+        } else {
+            pillar = createPillarBody(pillarDown, new Vector2(tmpVector.x +
+                    pillarDown.getRegionWidth() / 2f,
+                    480 - pillarDown.getRegionHeight() / 2f));
+        }
+        lastPillarBody = pillar;
+        pillars.add(pillar);
+    }
+
+    private Body createPillarBody(TextureRegion region, Vector2 position) {
+        BodyDef boxBodyDef = new BodyDef();
+        boxBodyDef.type = BodyType.StaticBody;
+        boxBodyDef.position.x = position.x / BOX2D_TO_CAMERA;
+        boxBodyDef.position.y = position.y / BOX2D_TO_CAMERA;
+        Body boxBody = world.createBody(boxBodyDef);
+        PolygonShape trianglePoly = new PolygonShape();
+
+        float[] vertices;
+        if (region == pillarUp)
+            vertices = new float[]{-5.4f, -11.95f, 1.1f, 11.95f, 5.4f, -11.95f};
+        else
+            vertices = new float[]{-5.4f, 11.95f, 5.4f, 11.95f, 1.1f, -11.95f};
+
+        trianglePoly.set(vertices);
+        boxBody.createFixture(trianglePoly, 1);
+        trianglePoly.dispose();
+        boxBody.setUserData(region);
+        return boxBody;
+    }
+
+    private void launchMeteor() {
+        nextMeteorIn = 1.5f + MathUtils.random() * 5;
+        if (meteorInScene) return;
+        tmpVector.set(box2dCam.position.x + 42f, 0);
+        if (game.soundEnabled) spawnSound.play(game.soundVolume);
+        meteorInScene = true;
+        tmpVector.y = (80 + MathUtils.random() * 320) / BOX2D_TO_CAMERA;
+        meteorBody.setTransform(tmpVector, 0);
+        Vector2 destination = new Vector2();
+        destination.x = box2dCam.position.x - 42f;
+        destination.y = (80 + MathUtils.random() * 320) / BOX2D_TO_CAMERA;
+        destination.sub(tmpVector).nor();
+        destination.scl(METEOR_SPEED);
+        meteorBody.setLinearVelocity(destination);
+    }
+
+
+
     private void checkAndCreatePickup(float delta) {
         pickupTiming.sub(delta);
         if (pickupTiming.x <= 0){
             pickupTiming.x = (float) (0.5 + MathUtils.random() * 0.5);
             if (addPickup(Pickup.STAR))
-                pickupTiming.x = 1 + (float) MathUtils.random() * 2;
+                pickupTiming.x = 1 + MathUtils.random() * 2;
         }
         if (pickupTiming.y <= 0){
             pickupTiming.y = (float) (0.5 + MathUtils.random() * 0.5);
             if (addPickup(Pickup.FUEL))
-                pickupTiming.y = 3 + (float) MathUtils.random() * 2;
+                pickupTiming.y = 3 + MathUtils.random() * 2;
         }
         if (pickupTiming.z <= 0){
             pickupTiming.z = (float) (0.5 + MathUtils.random() * 0.5);
             if (addPickup(Pickup.SHIELD))
-                pickupTiming.z = 10 + (float) MathUtils.random() * 3;
+                pickupTiming.z = 10 + MathUtils.random() * 3;
         }
     }
 
@@ -492,10 +537,11 @@ public class ThrustCopterSceneBox2D extends BaseScene {
 
     private boolean addPickup(int pickupType) {
         testPoint.x = box2dCam.position.x + 42f;
-        testPoint.y = (float) (80 + MathUtils.random() * 320) / BOX2D_TO_CAMERA;
+        testPoint.y = (80 + MathUtils.random() * 320) / BOX2D_TO_CAMERA;
 
         hitBody = null;
-        world.QueryAABB(callback, testPoint.x - 1.9f, testPoint.y - 1.9f, testPoint.x + 1.9f,
+        world.QueryAABB(callback, testPoint.x - 1.9f,
+                testPoint.y - 1.9f, testPoint.x + 1.9f,
                 testPoint.y + 1.9f);
 
         if (hitBody != null) {
@@ -510,61 +556,64 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         return  true;
     }
 
-    private void addPillar() {
-        if (pillars.size == 0){
-            tmpVector.x = (float) (800 + MathUtils.random() * 400);
-        } else {
-            tmpVector.x = lastPillarBody.getPosition().x * BOX2D_TO_CAMERA + (float) (600 + MathUtils.random() * 400);
+    private void pickIt(Body pickupBody) {
+
+        Pickup pickup = (Pickup) pickupBody.getUserData();
+        if (game.soundEnabled) pickup.pickupSound.play(game.soundVolume);
+        switch (pickup.pickupType){
+            case Pickup.STAR:
+                starCount += pickup.pickupValue;
+                break;
+            case Pickup.SHIELD:
+                shieldCount = pickup.pickupValue;
+                break;
+            case Pickup.FUEL:
+                fuelCount = pickup.pickupValue;
+                break;
         }
-        Body pillar;
-        if (MathUtils.randomBoolean()){
-            pillar = createPillarBody(pillarUp, new Vector2(tmpVector.x + pillarUp.getRegionWidth() / 2,
-                    pillarUp.getRegionHeight() / 2), BodyType.StaticBody);
-        } else {
-            pillar = createPillarBody(pillarDown, new Vector2(tmpVector.x + pillarDown.getRegionWidth() / 2,
-                    480 - pillarDown.getRegionHeight() / 2), BodyType.StaticBody);
-        }
-        lastPillarBody = pillar;
-        pillars.add(pillar);
+        setForRemoval.add(pickupBody);
+        pickupsInScene.removeValue(pickupBody, false);
     }
 
-    private Body createPillarBody(TextureRegion region, Vector2 position, BodyType bodyType) {
-        BodyDef boxBodyDef = new BodyDef();
-        boxBodyDef.type = bodyType;
-        boxBodyDef.position.x = position.x / BOX2D_TO_CAMERA;
-        boxBodyDef.position.y = position.y / BOX2D_TO_CAMERA;
-        Body boxBody = world.createBody(boxBodyDef);
-
-        PolygonShape trianglePoly = new PolygonShape();
-
-        if (region == pillarUp) {
-            float[] vertices = {-5.4f, -11.95f, 1.1f, 11.95f, 5.4f, -11.95f};
-            trianglePoly.set(vertices);
+    private void endGame() {
+        if (gameState != GameState.GAME_OVER){
+            if (game.soundEnabled) crashSound.play(game.soundVolume);
+            planeBody.setAwake(false);
+            gameState = GameState.GAME_OVER;
+            explosion.reset();
+            planePosition = planeBody.getPosition();
+            planePosition.scl(BOX2D_TO_CAMERA);
+            explosion.setPosition(planePosition.x - (box2dCam.position.x - 40) * BOX2D_TO_CAMERA + 10,
+                    planePosition.y);
         }
-        else {
-            float[] vertices = {-5.4f, 11.95f, 5.4f, 11.95f, 1.1f, -11.95f};
-            trianglePoly.set(vertices);
-        }
-        boxBody.createFixture(trianglePoly, 1);
-        trianglePoly.dispose();
-        boxBody.setUserData(region);
-        return boxBody;
     }
 
-    private void launchMeteor() {
-        nextMeteorIn = 1.5f + (float) MathUtils.random() * 5;
-        if (meteorInScene) return;
-        tmpVector.set(box2dCam.position.x + 42f, 0);
-        if (game.soundEnabled) spawnSound.play(game.soundVolume);
-        meteorInScene = true;
-        tmpVector.y = (float) (80 + MathUtils.random() * 320) / BOX2D_TO_CAMERA;
-        meteorBody.setTransform(tmpVector, 0);
-        Vector2 destination = new Vector2();
-        destination.x = box2dCam.position.x - 42f;
-        destination.y = (float) (80 + MathUtils.random() * 320) / BOX2D_TO_CAMERA;
-        destination.sub(tmpVector).nor();
-        destination.scl(METEOR_SPEED);
-        meteorBody.setLinearVelocity(destination);
+    private ItemType getItemType(Body body) {
+        if (body.equals(meteorBody)) return ItemType.METEOR;
+        else if (body.equals(terrainBodyDown)
+        || body.equals(terrainBodyUp)) return ItemType.TERRAIN;
+        else if (pickupsInScene.contains(body, false)) return ItemType.PICK_UP;
+        else return ItemType.PILLAR;
+    }
+
+    @Override
+    protected void handleBackPress() {
+        super.handleBackPress();
+        System.out.println("back");
+        if (gamePaused) resume();
+        else pause();
+    }
+
+    @Override
+    public void pause() {
+        super.pause();
+        gamePaused = true;
+    }
+
+    @Override
+    public void resume() {
+        super.resume();
+        gamePaused = false;
     }
 
     @Override
