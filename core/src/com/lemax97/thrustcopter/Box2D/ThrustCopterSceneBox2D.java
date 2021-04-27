@@ -24,7 +24,8 @@ public class ThrustCopterSceneBox2D extends BaseScene {
 
     World world;
     Box2DDebugRenderer debugRenderer;
-    Body planeBody, terrainBodyUp, terrainBodyDown, meteorBody, lastPillarBody, bodyA, bodyB, unknownBody, hitBody;
+    Body planeBody, terrainBodyUp, terrainBodyDown, meteorBody,
+            lastPillarBody, bodyA, bodyB, unknownBody, hitBody;
 
     OrthographicCamera box2dCam;
 
@@ -187,7 +188,7 @@ public class ThrustCopterSceneBox2D extends BaseScene {
     }
 
     private void initPhysics() {
-        world = new World(new Vector2(5f, -8), true);
+        world = new World(new Vector2(8f, -10), true);
         debugRenderer = new Box2DDebugRenderer();
         box2dCam = new OrthographicCamera(80, 48f);
         box2dCam.position.set(40, 24f, 0);
@@ -260,14 +261,9 @@ public class ThrustCopterSceneBox2D extends BaseScene {
 
             @Override
             public void postSolve(Contact contact, ContactImpulse impulse) {
-
             }
         });
-
     }
-
-
-
 
     private Body createPhysicsObjectFromGraphics(TextureRegion region, Vector2 position, BodyType bodyType) {
         BodyDef boxBodyDef = new BodyDef();
@@ -337,6 +333,7 @@ public class ThrustCopterSceneBox2D extends BaseScene {
             return;
         }
 
+//        if (gameState != GameState.GAME_OVER) planeAnimTime += deltaTime;
         planeAnimTime += deltaTime;
         deltaPosition = (box2dCam.position.x - previousCamXPos) * BOX2D_TO_CAMERA;
         previousCamXPos = box2dCam.position.x;
@@ -346,6 +343,28 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         }
         if (terrainOffset > 0){
             terrainOffset = -terrainBelow.getRegionWidth();
+        }
+
+        if(meteorInScene){
+            meteorPosition=meteorBody.getPosition();
+            if(meteorPosition.x-box2dCam.position.x<-42){
+                meteorInScene=false;
+            }
+            meteorPosition.scl(BOX2D_TO_CAMERA);
+        }
+
+        for(Body vec: pillars) {
+            if(vec.getPosition().x+5.4-box2dCam.position.x<-42){
+                pillars.removeValue(vec, false);
+                world.destroyBody(vec);
+            }
+        }
+
+        for(Body pickup: pickupsInScene) {
+            if(pickup.getPosition().x+1.9-box2dCam.position.x<-42){
+                pickupsInScene.removeValue(pickup, false);
+                world.destroyBody(pickup);
+            }
         }
 
         if(lastPillarBody.getPosition().x<box2dCam.position.x){
@@ -367,6 +386,13 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         box2dCam.position.x = planeBody.getPosition().x + 19.4f;
         terrainBodyUp.setTransform(box2dCam.position.x + 0.04f, 44.5f, 0);
         terrainBodyDown.setTransform(box2dCam.position.x + 0.04f, 3.5f, 0);
+
+        if(setForRemoval.size>0){
+            for(Body pickup: setForRemoval) {
+                world.destroyBody(pickup);
+            }
+            setForRemoval.clear();
+        }
     }
 
     private void drawSceneBox2D() {
@@ -413,7 +439,7 @@ public class ThrustCopterSceneBox2D extends BaseScene {
         planePosition.scl(BOX2D_TO_CAMERA);
         smoke.setPosition(planePosition.x + 20 - (box2dCam.position.x - 40) * BOX2D_TO_CAMERA - 44,
                 planePosition.y - 7);
-        smoke.draw(batch);
+        if (gameState != GameState.GAME_OVER) smoke.draw(batch);
         batch.draw(plane.getKeyFrame(planeAnimTime), planePosition.x - (box2dCam.position.x - 40) *
                 BOX2D_TO_CAMERA - 44, planePosition.y - 36.5f);
         if (shieldCount > 0) {
@@ -438,7 +464,7 @@ public class ThrustCopterSceneBox2D extends BaseScene {
 //        batch.draw(fuelIndicator,10,350,0,0,fuelPercentage,119);
         batch.draw(fuelIndicator, 10, 350, 0, 0,
                 fuelIndicator.getWidth() * fuelPercentage/100, 119);
-        if(gameState == GameState.GAME_OVER)explosion.draw(batch);
+        if(gameState == GameState.GAME_OVER) explosion.draw(batch);
         batch.end();
     }
 
