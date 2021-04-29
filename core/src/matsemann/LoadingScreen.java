@@ -20,6 +20,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.lemax97.thrustcopter.MenuScene;
 import com.lemax97.thrustcopter.ThrustCopterScene;
 import com.lemax97.thrustcopter.ThrustCopter;
+import com.lemax97.thrustcopter.TrdDmsn.Interaction3D;
+import com.lemax97.thrustcopter.TrdDmsn.Sample3D;
 
 import static com.lemax97.thrustcopter.ThrustCopter.screenHeight;
 import static com.lemax97.thrustcopter.ThrustCopter.screenWidth;
@@ -149,7 +151,8 @@ public class LoadingScreen extends ScreenAdapter {
             game.atlas = game.manager.get("thrustcopterassets.txt", TextureAtlas.class);
             game.font = game.manager.get("impact-40.fnt", BitmapFont.class);
 //            if (Gdx.input.isTouched()) { // If the screen is touched after the game is done loading, go to the main menu screen
-            game.setScreen(new MenuScene(game));
+//            game.setScreen(new MenuScene(game));
+            game.setScreen(new Interaction3D(game));
 //            }
         }
 
