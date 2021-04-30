@@ -35,7 +35,8 @@ public class Interaction3D extends BaseScene {
     Vector3 dimensions = new Vector3();
     BoundingBox bounds = new BoundingBox();
     float radius;
-    int selecting = -1;
+    int visibleCount, selected = -1, selecting = -1;
+    ModelInstance selectedInstance;
 
     AnimationController controller;
 
@@ -111,7 +112,12 @@ public class Interaction3D extends BaseScene {
         Gdx.input.setInputProcessor(new InputMultiplexer(myAdapter, cameraController));
     }
 
-    private void setSelected(int selecting) {
+    private void setSelected(int value) {
+        if (selected == value) return;
+        if (selected >= 0) {
+            selectedInstance = instances.get(value);
+        }
+        selected = value;
     }
 
     private int getObject(int screenX, int screenY) {
@@ -139,15 +145,32 @@ public class Interaction3D extends BaseScene {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
         Gdx.gl.glClearColor(0.13f, 0.13f, 0.13f, 1);
 
+        if (selectedInstance!= null){
+            selectedInstance.transform.rotate(Vector3.Z, 5);
+        }
+
         // Respond to user events and update the camera
         cameraController.update();
-        controller.update(delta);
-
+        visibleCount = 0;
         // Draw all model instances using the camera
         modelBatch.begin(camera);
-        modelBatch.render(instances, environment);
+        for (final ModelInstance instance : instances){
+            if (isVisible(instance)){
+                modelBatch.render(instance, environment);
+                visibleCount++;
+            }
+        }
         modelBatch.end();
+        Gdx.app.log("VC", ""+ visibleCount);
         super.render(delta);
+    }
+
+    private boolean isVisible(ModelInstance instance) {
+        instance.transform.getTranslation(position);
+//        return camera.frustum.pointInFrustum(position);
+        position.add(center);
+//        return camera.frustum.boundsInFrustum(position, dimensions);
+        return camera.frustum.sphereInFrustum(position, radius);
     }
 
     @Override
