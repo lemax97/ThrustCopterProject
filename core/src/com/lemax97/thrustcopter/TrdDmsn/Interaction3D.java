@@ -155,7 +155,7 @@ public class Interaction3D extends BaseScene {
             }
         }
         modelBatch.end();
-        Gdx.app.log("VC", ""+ visibleCount);
+//        Gdx.app.log("VC", ""+ visibleCount);
         super.render(delta);
     }
 
