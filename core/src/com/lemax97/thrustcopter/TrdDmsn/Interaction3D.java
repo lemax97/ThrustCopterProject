@@ -38,8 +38,6 @@ public class Interaction3D extends BaseScene {
     int visibleCount, selected = -1, selecting = -1;
     ModelInstance selectedInstance;
 
-    AnimationController controller;
-
     public Interaction3D(ThrustCopter thrustCopter) {
         super(thrustCopter);
 
@@ -54,10 +52,10 @@ public class Interaction3D extends BaseScene {
         camera.far = 300f;
         camera.update();
 
-        //Create camera controller
+        //Create the generic camera input controller to make the app interactive
         cameraController = new  CameraInputController(camera);
 
-        //Create Environment
+        //Set up environment with simple lightning
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -0.8f, 0.3f, -1f));
@@ -75,16 +73,12 @@ public class Interaction3D extends BaseScene {
         }
         plane = new ModelInstance(model);
         plane.calculateBoundingBox(bounds);
-        center.set(bounds.getCenterX(), bounds.getCenterY(), bounds.getCenterZ());
-        dimensions.set(bounds.getDimensions(center));
+        bounds.getCenter(center);
+        bounds.getDimensions(dimensions);
         radius = dimensions.len() / 2f;
 
         plane.transform.setToTranslation(0, 0, -1f);
         instances.add(plane);
-
-        //Create 3d animation
-        controller = new AnimationController(plane);
-        controller.setAnimation("Scene", -1);
 
         InputAdapter myAdapter = new InputAdapter(){
             @Override
